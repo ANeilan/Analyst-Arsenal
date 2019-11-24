@@ -21,7 +21,7 @@ import base64
 import glob
 import json
 import os
-import Queue
+import queue
 import re
 import subprocess
 import sys
@@ -136,7 +136,7 @@ class UrlQueueManager():
         self.extensions = config["extensions"]
         self.ext_csv    = ",".join(self.extensions)
 
-        print(colored("Creating {} threads...\n".format(self.args.threads), "yellow", attrs=["bold"]))
+        print((colored("Creating {} threads...\n".format(self.args.threads), "yellow", attrs=["bold"])))
 
         thread_master(self.args.threads, self.check_site)
 
@@ -217,14 +217,14 @@ class UrlQueueManager():
 def check_path(args):
     """ """
     if not (os.path.exists(args.cap_dir)):
-        print(colored("The output directory is temporarily unavailable. Exiting!", "red", attrs=["underline"]))
+        print((colored("The output directory is temporarily unavailable. Exiting!", "red", attrs=["underline"])))
         exit()
     return
 
 def create_queue(queue_name):
     """ """
-    print(colored("Starting the {}...\n".format(queue_name), "yellow", attrs=["bold"]))
-    return Queue.Queue()
+    print((colored("Starting the {}...\n".format(queue_name), "yellow", attrs=["bold"])))
+    return queue.Queue()
 
 def download_site(args, day, protocol, domain, ext_csv, url, resp):
     """ """
@@ -317,13 +317,13 @@ def get_domains(args):
     whoisds = "https://whoisds.com//whois-database/newly-registered-domains/{}/nrd"
 
     try:
-        print(colored("Attempting to get domain list using encoded filename...", "yellow", attrs=["bold"]))
+        print((colored("Attempting to get domain list using encoded filename...", "yellow", attrs=["bold"])))
         resp = send_request(whoisds.format(encoded_filename), proxies, uagent, args)
     except Exception as err:
         message_failed(args, err, None)
 
         try:
-            print(colored("Attempting to get domain list using plain-text filename...", "yellow", attrs=["bold"]))
+            print((colored("Attempting to get domain list using plain-text filename...", "yellow", attrs=["bold"])))
             resp = send_request(whoisds.format(filename), proxies, uagent, args)
         except Exception as err:
             message_failed(args, err, None)
@@ -331,7 +331,7 @@ def get_domains(args):
 
     try:
         if resp.status_code == 200 and filename in resp.headers["Content-Disposition"]:
-            print(colored("Download successful...\n", "yellow", attrs=["bold"]))
+            print((colored("Download successful...\n", "yellow", attrs=["bold"])))
 
             content_disposition = resp.headers["Content-Disposition"].replace("attachment; filename=", "")
             content_disposition = content_disposition.replace('"', "")
@@ -423,7 +423,7 @@ def query_urlscan(args):
     timespan = datetime.strptime(timespan, "%a, %d %b %Y %H:%M:%S")
 
     try:
-        print(colored("Querying urlscan.io for URLs...\n", "yellow", attrs=["bold"]))
+        print((colored("Querying urlscan.io for URLs...\n", "yellow", attrs=["bold"])))
         urlscan  = "https://urlscan.io/api/v1/search/?q={}%20AND%20filename%3A{}&size=10000"
         endpoint = urlscan.format(config["queries"][args.query_type], args.query_string)
         resp     = send_request(endpoint, proxies, uagent, args)
@@ -432,7 +432,7 @@ def query_urlscan(args):
         exit()
 
     try:
-        if not (resp.status_code == 200 and "results" in resp.json().keys()):
+        if not (resp.status_code == 200 and "results" in list(resp.json().keys())):
             raise Exception
     except Exception as err:
         message_failed(args, err, None)
@@ -458,7 +458,7 @@ def read_config(args):
     with open("config.yaml", "r") as f:
         config = yaml.safe_load(f)
 
-    for key in config.keys():
+    for key in list(config.keys()):
         if key == "exclusions" and config[key] is None:
             message_external(key, "config")
             exit()
@@ -472,7 +472,7 @@ def read_config(args):
 
 def read_file(input_file):
     """ """
-    print(colored("Reading file containing URLs...\n", "yellow", attrs=["bold"]))
+    print((colored("Reading file containing URLs...\n", "yellow", attrs=["bold"])))
     
     with open(input_file, "r") as open_file:
         contents = open_file.read().splitlines()
@@ -484,7 +484,7 @@ def recompile_exclusions():
 
     exclusions = []
 
-    if "exclusions" in config.keys():
+    if "exclusions" in list(config.keys()):
         for exclusion in config["exclusions"]:
             exclusions.append(re.compile(exclusion, re.IGNORECASE))
     return exclusions
@@ -502,7 +502,7 @@ def remove_empty(domain_dir, args):
         if out == '':
             return False
 
-        empty_dirs = filter(None, out.split("\n"))
+        empty_dirs = [_f for _f in out.split("\n") if _f]
 
         for empty_dir in empty_dirs:
             tqdm.tqdm.write("{}: {} (Removing)".format(
@@ -546,7 +546,7 @@ def score_domain(config, domain, args):
         if word in domain:
             score += config["keywords"][word]
 
-    for key in [k for (k,s) in config["keywords"].items() if s >= 70]:
+    for key in [k for (k,s) in list(config["keywords"].items()) if s >= 70]:
         for word in [w for w in words_in_domain if w not in ["email", "mail", "cloud"]]:
             if distance(str(word), str(key)) == 1:
                 score += 70
@@ -575,7 +575,7 @@ def show_networking(args):
         }
         torsocks = "torsocks"
 
-    print(colored("\nGetting IP Address...", "yellow", attrs=["bold"]))
+    print((colored("\nGetting IP Address...", "yellow", attrs=["bold"])))
     try:
         endpoint = "https://api.ipify.org"
         resp     = send_request(endpoint, proxies, uagent, args)
@@ -587,7 +587,7 @@ def show_networking(args):
     if args.tor:
         ip_addr = ".".join(["XXX.XXX.XXX", ip_addr.split(".")[:-1][0]])
 
-    print(colored("{} IP: {}\n".format(ip_type, ip_addr), "yellow", attrs=["bold"]))
+    print((colored("{} IP: {}\n".format(ip_type, ip_addr), "yellow", attrs=["bold"])))
     return
 
 def send_request(endpoint, proxies, uagent, args):
@@ -604,33 +604,33 @@ def show_summary(args):
 
     print("Summary:")
     if "ctl_server" in args:
-        print("    ctl_server     : {}".format(args.ctl_server))
+        print(("    ctl_server     : {}".format(args.ctl_server)))
     if "delta" in args:
-        print("    delta          : {}".format(args.delta))
-    print("    directory      : {}".format(args.cap_dir))
+        print(("    delta          : {}".format(args.delta)))
+    print(("    directory      : {}".format(args.cap_dir)))
     if "dns_twist" in args:
-        print("    dns_twist      : {}".format(args.dns_twist))
+        print(("    dns_twist      : {}".format(args.dns_twist)))
     if "exclude" in args:
-        print("    exclusions     : {}".format(args.exclude.split(",")))
-    print("    level          : {}".format(args.level))
+        print(("    exclusions     : {}".format(args.exclude.split(","))))
+    print(("    level          : {}".format(args.level)))
     if "log_nc" in args:
-        print("    log_file       : {}".format(args.log_nc))
+        print(("    log_file       : {}".format(args.log_nc)))
     if "max_redirect" in args:
-        print("    max_redirect   : {}".format(args.max_redirect))
+        print(("    max_redirect   : {}".format(args.max_redirect)))
     if "score" in args:
-        print("    minimum_score  : {}".format(args.score))
+        print(("    minimum_score  : {}".format(args.score)))
     if "query_string" in args:
-        print("    query_string   : {}".format(args.query_string))
+        print(("    query_string   : {}".format(args.query_string)))
     if "query_type" in args:
-        print("    query_type     : {}".format(args.query_type.lower()))
-    print("    quiet          : {}".format(args.quiet))
-    print("    threads        : {}".format(args.threads))
-    print("    timeout        : {}".format(args.timeout))
-    print("    tor            : {}".format(args.tor))
+        print(("    query_type     : {}".format(args.query_type.lower())))
+    print(("    quiet          : {}".format(args.quiet)))
+    print(("    threads        : {}".format(args.threads)))
+    print(("    timeout        : {}".format(args.timeout)))
+    print(("    tor            : {}".format(args.tor)))
     if "verbose" in args:
-        print("    verbose        : {}".format(args.verbose))
+        print(("    verbose        : {}".format(args.verbose)))
     if "very_verbose" in args:
-        print("    verbose+       : {}".format(args.very_verbose))
+        print(("    verbose+       : {}".format(args.very_verbose)))
     return
 
 def thread_master(threads, target):

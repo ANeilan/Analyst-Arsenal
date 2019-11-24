@@ -40,7 +40,6 @@ import tqdm
 
 import commons
 
-
 # Parse Arguments
 parser = argparse.ArgumentParser(
     description="Attempt to detect phishing kits and open directories via Certstream."
@@ -118,6 +117,7 @@ if args.dns_twist and args.threads < 20:
 
 tqdm.tqdm.monitor_interval = 0
 
+
 def callback(message, context):
     """Callback handler for certstream events."""
     if message["message_type"] == "certificate_update":
@@ -136,7 +136,7 @@ def callback(message, context):
             if exclusion.search(domain):
                 match_found = True
                 break
-        
+
         if match_found:
             return
 
@@ -146,7 +146,7 @@ def callback(message, context):
 
         if "Let's Encrypt" in message["data"]["chain"][0]["subject"]["aggregated"]:
             score += 10
-        
+
         if score < args.score:
             if args.log_nc:
                 with open(args.log_nc, "a") as log_nc:
@@ -187,6 +187,7 @@ def callback(message, context):
             with open("queue_file.txt", "a") as queue_state:
                 queue_state.write("{}\n".format(url))
 
+
 def on_open(instance):
     """Instance is the CertStreamClient instance that was opened"""
     print(colored("Connection successfully established!\n", "yellow", attrs=["bold"]))
@@ -209,6 +210,7 @@ def on_open(instance):
         pbar = tqdm.tqdm(desc="certificate_update", unit="cert")
     return
 
+
 def main():
     """ """
     global exclusions
@@ -220,13 +222,13 @@ def main():
 
     # Print start messages
     commons.show_summary(args)
-    commons.show_networking(args) # globals: proxies, torsocks
+    commons.show_networking(args)  # globals: proxies, torsocks
 
     # Read config.yaml
-    config = commons.read_config(args) # globals: config
+    config = commons.read_config(args)  # globals: config
 
     # Recompile exclusions
-    exclusions = commons.recompile_exclusions() # globals: exclusions
+    exclusions = commons.recompile_exclusions()  # globals: exclusions
 
     # Create queues
     url_queue = commons.create_queue("url_queue")
@@ -241,6 +243,7 @@ def main():
         url=args.ctl_server,
         on_open=on_open
     )
+
 
 if __name__ == "__main__":
     main()
